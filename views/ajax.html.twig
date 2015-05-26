@@ -1,0 +1,28 @@
+{% if comments %}
+    <div id="commentslist">
+    <h2>Комментарии</h2>
+    {% for comment in comments %}
+      <div id="{{comment.commentId}}" style="margin-left: {{(comment.getCommentLevel() - 1) * 25}}px;">
+        <div>№{{comment.commentId}}&nbsp;<small>{{comment.date}}</small><a class = "nb-reply-href" data-reply="{{comment.commentId}}" style="margin-left: 10px" >Ответить</a></div>
+          <p>
+             {{comment.message}}
+          </p>
+          
+      </div>
+    {% endfor %}
+    </div>
+    {%if pageLinks|length>1%}
+    <nav>
+      <ul class="pagination">
+        {%for pageNumber, url in pageLinks%}
+          <li {% if startRecord == (pageNumber-1) * recordsPerPage%} class="active" {% endif %}>
+            <a href="{{url}}">{{pageNumber}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {%endif%}  
+     
+  {% else %}
+    <h2>Комментариев нет</h2>
+  {% endif %}

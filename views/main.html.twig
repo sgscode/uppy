@@ -1,0 +1,24 @@
+{% extends "base.html.twig" %}
+{% block mainPage %}
+  <li><a class="navbar-brand" href="http://localhost/filehost/web/main">Главная</a></li>
+  {% endblock %}
+  {% block content %}
+  <div class="container">
+    {% if message %}
+      {%if message == 'success'%}
+        <div class="alert alert-success" role="alert">Файл успешно загружен</div>
+      {% else %}
+        <div class="alert alert-danger" role="alert">{{message}}</div>
+      {% endif %}
+    {% endif %}
+    <h2>Выберите файл для загрузки</h2>
+    <div class="form-inline">
+      <form  method="post" role="form" action="http://localhost/filehost/web/" enctype="multipart/form-data">
+        <div class="form-group" >
+          <input  type="file" name="userfile" id="file" />
+        </div>
+        <button type="submit" >Submit</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

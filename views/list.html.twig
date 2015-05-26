@@ -1,0 +1,31 @@
+{% extends "main.html.twig" %}
+{% block mainPage %}
+  <li><a class="navbar-brand" href="http://localhost/filehost/web/">Главная</a></li>
+  {% endblock %}
+  {% block filelist %}
+  <div class="container">
+    <h3>Последние файлы</h3>
+    
+    <div class="main-column">   
+      <ul>
+        {% for file in files %}
+          <li>
+            <a href="http://localhost/filehost/web/{{ file.fileKey }}">{{ file.fileName }}</a>
+            <span>{{  file.fileSize  }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+      
+    <nav>
+      <ul class="pagination">
+        {%for pageNumber, url in countPage%}
+          <li {% if startRecord == (pageNumber-1) * recordsPerPage%} class="active" {% endif %}>
+              <a href="{{url}}">{{pageNumber}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+      
+  </div>
+{% endblock %}
