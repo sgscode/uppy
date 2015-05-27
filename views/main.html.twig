@@ -3,7 +3,8 @@
   <li><a class="navbar-brand" href="http://localhost/filehost/web/main">Главная</a></li>
   {% endblock %}
   {% block content %}
-  <div class="container">
+  <div class="container" id="dropbox" ondragenter="dropenter(event);" ondragover="dropenter(event);"
+     ondragleave="dropleave();" ondrop="return dodrop(event);" > 
     {% if message %}
       {%if message == 'success'%}
         <div class="alert alert-success" role="alert">Файл успешно загружен</div>
@@ -21,4 +22,6 @@
       </form>
     </div>
   </div>
+  <div id="upload_overall">
+</div>
 {% endblock %}

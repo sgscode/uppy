@@ -17,7 +17,7 @@ class File
     protected $fileError;
     protected $fileTempName;
 
-    private function __construct()
+    public function __construct()
     {
         
     }

@@ -98,21 +98,52 @@ $app->get('/download/file/:fileKey', function ($fileKey) use ($app, $config) {
 });
 
 //Загрузка файла на сервер
+//$app->post('/', function () use ($app, $config) {
+//    $message = 'Ошибка!!! Размер файла должен быть не более 10 мегабайт';
+//    if (isset($_FILES['userfile'])) {
+//        $file = \UppyApp\File::setPropertiesFromPost($_FILES['userfile']);
+//        $file->generateFileKey();
+//        $message = 'success';
+//        $uploader = new UppyApp\Uploader($config['uploadFolder']);
+//        try {
+//            $uploader->checkUploadErrors($file);
+//            $uploader->saveFile($file);
+//        } catch (Exception $e) {
+//            $message = $e->getMessage();
+//        }
+//    }
+//    $app->render('main.html.twig', array(
+//        'message' => $message
+//            )
+//    );
+//});
+
+
+//Тестирование загрузки ajax
 $app->post('/', function () use ($app, $config) {
-    $message = 'Ошибка!!! Размер файла должен быть не более 10 мегабайт';
-    if (isset($_FILES['userfile'])) {
-        $file = \UppyApp\File::setPropertiesFromPost($_FILES['userfile']);
+   // $message = 'Ошибка!!! Размер файла должен быть не более 10 мегабайт';
+   // if (isset($_POST['X-File-Name'])) {
+    $message='all ok'; 
+     try{   $file = new \UppyApp\File();
+        $file->setFileName($_SERVER['HTTP_X_FILE_NAME']);
+        $file->setFileType('sldjfjsdn');
+        $file->setFileSize('12345');
         $file->generateFileKey();
-        $message = 'success';
-        $uploader = new UppyApp\Uploader($config['uploadFolder']);
-        try {
-            $uploader->checkUploadErrors($file);
-            $uploader->saveFile($file);
-        } catch (Exception $e) {
-            $message = $e->getMessage();
+        //$message = 'success';
+        $in= fopen("php://input", "rb");
+        $out = fopen($config['uploadFolder'].$file->getFileKey(), 'w');
+        while ( ! feof($in) ) {
+            fwrite($out, fread($in, 8192));
         }
-    }
-    $app->render('main.html.twig', array(
+        fclose($in);
+        fclose($out);
+        $app->fileMapper->saveFile($file);
+     } catch (Exception $e){
+          $message = $e->getMessage();
+     }
+       
+   // }
+    $app->render('test.html.twig', array(
         'message' => $message
             )
     );
