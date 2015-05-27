@@ -68,9 +68,9 @@
     <h2>Комментариев нет</h2>
   {% endif %}
   </div>
-<form id="commentform" method="POST" action="http://localhost/filehost/web/ajax/{{file.fileKey}}/{{page}}">
+<form id="commentform" method="POST" action="http://localhost/filehost/web/{{file.fileKey}}/{{page}}">
     <input id="parentComment" type="hidden" name="parentComment" value="">
-    <input id="filekey" type="hidden" name="filekey" value="{{file.fileKey}}">
+  
     <div id="comment" class="form-group">
       <label class="control-label" for="comment"><h3>Добавить комментарий&nbsp;</h3><div id="reply-hide"><span id="infomessage">в ответ на пост №</span><span id="xclosed">&nbsp;X</span></div></label>
       <textarea id="usercomment" class="form-control" name="comment" rows="4" cols="40"></textarea>

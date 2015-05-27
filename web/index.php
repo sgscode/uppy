@@ -51,7 +51,7 @@ $app->get('/main(/:page)', function ($page = 1) use ($app, $config) {
 
 //Страница загрузки файла с сервера
 $app->get('/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config) {
-    $url = 'http://localhost/filehost/web/ajax/' . $fileKey;
+    $url = 'http://localhost/filehost/web/' . $fileKey;
     $fileId = $app->fileMapper->getFileIdByKey($fileKey);
     $countRecords = $app->commentMapper->getCountComments($fileId);
     $recordsPerPage = $config['commentsPerPage'];
@@ -78,35 +78,6 @@ $app->get('/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config
     }
 });
 
-//тестирование ajax
-$app->get('/ajax/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config) {
-    $url = 'http://localhost/filehost/web/ajax/' . $fileKey;
-    $fileId = $app->fileMapper->getFileIdByKey($fileKey);
-    $countRecords = $app->commentMapper->getCountComments($fileId);
-    $recordsPerPage = $config['commentsPerPage'];
-    $startRecord = ($page - 1) * $recordsPerPage;
-    $comments = $app->commentMapper->getFileComments($fileId, $startRecord, $recordsPerPage);
-    //$file = $app->fileMapper->getFileByKey($fileKey);
-    $pages = new \UppyApp\PageNavigator($recordsPerPage, $countRecords, $url);
-    
-    if (file_exists($config['uploadFolder'] . $fileKey)) {
-        $app->render('ajax.html.twig', array(
-           // 'fileInfo'=>$file->getFileMediaInfoAsArray(),
-           // 'file' => $file,
-           'comments' => $comments,
-            'pageLinks' => $pages->getPageLink(),
-            'startRecord' => $startRecord,
-            'recordsPerPage' => $recordsPerPage,
-            'page' => $page
-                )
-        );
-    } else {
-        $app->render('fileNotFound.html.twig', array(
-           // 'file' => $file
-                )
-        );
-    }
-});
 
 //Получение файла с сервера
 $app->get('/download/file/:fileKey', function ($fileKey) use ($app, $config) {
