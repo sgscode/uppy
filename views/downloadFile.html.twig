@@ -39,6 +39,7 @@
   
   
 <div id="allcomments">
+  <div id="ac">
   {% if comments %}
     <div id="commentslist">
     <h2>Комментарии</h2>
@@ -53,11 +54,11 @@
     {% endfor %}
     </div>
     {%if pageLinks|length>1%}
-    <nav>
+    <nav id="navpages">
       <ul class="pagination">
         {%for pageNumber, url in pageLinks%}
           <li {% if startRecord == (pageNumber-1) * recordsPerPage%} class="active" {% endif %}>
-            <a href="{{url}}">{{pageNumber}}</a>
+            <a   class="data-pages" data-id="{{pageNumber}}">{{pageNumber}}</a>
           </li>
         {% endfor %}
       </ul>
@@ -68,7 +69,8 @@
     <h2>Комментариев нет</h2>
   {% endif %}
   </div>
-<form id="commentform" method="POST" action="http://localhost/filehost/web/ajax/{{file.fileKey}}/{{page}}">
+  </div>
+<form id="commentform" method="POST" action="http://localhost/filehost/web/{{file.fileKey}}/{{page}}">
     <input id="parentComment" type="hidden" name="parentComment" value="">
     <input id="filekey" type="hidden" name="filekey" value="{{file.fileKey}}">
     <div id="comment" class="form-group">
