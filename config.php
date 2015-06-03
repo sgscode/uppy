@@ -7,7 +7,8 @@ $config = array(
     'dbPass' => 'test',
     'uploadPath'=>__DIR__.'/web/files/',
     'uploadFolder'=>'files/',
-    'filesPerPage'=> 15,
-    'countLastFiles'=>100,
-    'commentsPerPage'=>10
+    'filesPerPage'=> 20,
+    'countLastFiles'=>200,
+    'commentsPerPage'=>10,
+    'dbPort'=>9306
 );

@@ -2,8 +2,6 @@
 
 namespace UppyApp;
 
-
-
 class Uploader
 {
 
@@ -36,13 +34,23 @@ class Uploader
 
     public function saveFile(File $file)
     {
+        $app = \Slim\Slim::getInstance();
+        for ($i = 0; $i < 20; $i++) {
+            $file->generateFileKey();
+            if (!$app->fileMapper->getFileIdByKey($file->getFileKey())) {
+                break;
+            }
+            if ($i == 19) {
+                throw new \UppyApp\FileException("Проблемы на сервере, попробуйте позже");
+            }
+        }
         $uploadfile = $this->uploadFolder . $file->getFileKey();
         if (move_uploaded_file($file->getFileTempName(), $uploadfile)) {
             $fileAnalyzer = new \UppyApp\FileAnylazer();
             $fileInfo = $fileAnalyzer->analyzeFile($uploadfile);
             $file->setFileMediaInfo($fileInfo);
-            $app = \Slim\Slim::getInstance();
-            $app->fileMapper->saveFile($file);
+            $file = $app->fileMapper->saveFile($file);
+            $app->sphinxSearch->updateRtIndex($file);
             if ($file->isImage()) {
                 $this->createThumb($file->getFileKey());
             }
@@ -59,7 +67,7 @@ class Uploader
     public function createThumb($fileKey)
     {
         list($width, $height) = getimagesize('C:\xampp\htdocs\filehost\web\files/' . $fileKey);
-        $imageManager = new \Intervention\Image\ImageManager(array('driver'=>'gd'));
+        $imageManager = new \Intervention\Image\ImageManager(array('driver' => 'gd'));
         $image = $imageManager->make('C:\xampp\htdocs\filehost\web\files\\' . $fileKey);
         if ($width >= $height) {
             $image->resize(250, null, function ($constraint) {

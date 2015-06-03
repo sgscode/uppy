@@ -29,6 +29,8 @@ class FileMapper
                                                       :fileKey, :fileMediaInfo)");
         $this->bindFields($STH, $file);
         $STH->execute();
+        $file->setId($this->DBH->lastInsertId());
+        return $file;
     }
 
     public function getLastFiles($startRecord = 0, $countPerPage = 10)
@@ -50,19 +52,31 @@ class FileMapper
         $STH->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, "UppyApp\File");
         return $STH->fetch();
     }
-    
-    public function getCountFiles($limit){
-         $STH = $this->DBH->prepare("SELECT count(*) FROM (select 1 from files  limit 0, :limit) as tbl");
-         $STH->bindValue(":limit", (int) $limit, \PDO::PARAM_INT);
-         $STH->execute();
-         return $STH->fetchColumn();
+
+    public function getCountFiles($limit)
+    {
+        $STH = $this->DBH->prepare("SELECT count(*) FROM (select 1 from files  limit 0, :limit) as tbl");
+        $STH->bindValue(":limit", (int) $limit, \PDO::PARAM_INT);
+        $STH->execute();
+        return $STH->fetchColumn();
+    }
+
+    public function getFileIdByKey($key)
+    {
+        $STH = $this->DBH->prepare("SELECT id FROM files where fileKey = :fileKey");
+        $STH->bindValue(":fileKey", $key);
+        $STH->execute();
+        return $STH->fetchColumn();
     }
     
-    public function getFileIdByKey($key){
-         $STH = $this->DBH->prepare("SELECT id FROM files where fileKey = :fileKey");
-         $STH->bindValue(":fileKey", $key);
-         $STH->execute();
-         return $STH->fetchColumn();
+    public function getFilesByIdArray( $idArray)
+    {
+        $ids=implode(',', $idArray);
+        $query="SELECT fileName, fileType, fileSize, fileKey
+                                   FROM files WHERE id in ($ids) ORDER BY id DESC";
+        $STH = $this->DBH->prepare($query);
+        $STH->execute();
+        return $STH->fetchAll(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, "UppyApp\File");
     }
 
 }

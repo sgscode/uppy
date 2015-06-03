@@ -68,8 +68,17 @@ class File
             return false;
         }
     }
+    function getId()
+    {
+        return $this->id;
+    }
 
-    function getFileName()
+    function setId($id)
+    {
+        $this->id = $id;
+    }
+
+        function getFileName()
     {
         return $this->fileName;
     }

@@ -14,7 +14,15 @@ $app->container->singleton('DBH', function () use($config) {
     $DBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     return $DBH;
 });
+$app->container->singleton('sphinxDBH', function () use($config) {
+    $sphinxDBH = new PDO('mysql:host=localhost;port=9306');
+    $sphinxDBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    return $sphinxDBH;
+});
 
+$app->container->singleton('sphinxSearch', function() use ($app) {
+    return new \UppyApp\SphinxSearch($app->sphinxDBH);
+});
 
 $app->container->singleton('fileMapper', function() use ($app) {
     return new \UppyApp\FileMapper($app->DBH);
@@ -34,7 +42,7 @@ $app->get('/', function () use ($app) {
 
 //Список последних файлов
 $app->get('/main(/:page)', function ($page = 1) use ($app, $config) {
-    $url = 'http://localhost/filehost/web/main';
+    $url = '/filehost/web/main';
     $recordsPerPage = $config['filesPerPage'];
     $startRecord = ($page - 1) * $recordsPerPage;
     $countRecords = $app->fileMapper->getCountFiles($config['countLastFiles']);
@@ -51,7 +59,7 @@ $app->get('/main(/:page)', function ($page = 1) use ($app, $config) {
 
 //Страница загрузки файла с сервера
 $app->get('/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config) {
-    $url = 'http://localhost/filehost/web/' . $fileKey;
+    $url = '/filehost/web/' . $fileKey;
     $fileId = $app->fileMapper->getFileIdByKey($fileKey);
     $countRecords = $app->commentMapper->getCountComments($fileId);
     $recordsPerPage = $config['commentsPerPage'];
@@ -59,12 +67,12 @@ $app->get('/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config
     $comments = $app->commentMapper->getFileComments($fileId, $startRecord, $recordsPerPage);
     $file = $app->fileMapper->getFileByKey($fileKey);
     $pages = new \UppyApp\PageNavigator($recordsPerPage, $countRecords, $url);
-    
+
     if (file_exists($config['uploadFolder'] . $fileKey)) {
         $app->render('downloadFile.html.twig', array(
-            'fileInfo'=>$file->getFileMediaInfoAsArray(),
+            'fileInfo' => $file->getFileMediaInfoAsArray(),
             'file' => $file,
-           'comments' => $comments,
+            'comments' => $comments,
             'pageLinks' => $pages->getPageLink(),
             'startRecord' => $startRecord,
             'recordsPerPage' => $recordsPerPage,
@@ -82,7 +90,7 @@ $app->get('/:fileKey(/:page)', function ($fileKey, $page = 1) use ($app, $config
 //Получение файла с сервера
 $app->get('/download/file/:fileKey', function ($fileKey) use ($app, $config) {
     $file = $app->fileMapper->getFileByKey($fileKey);
-   
+
     $fileName = $file->getFileName();
     if (file_exists($config['uploadFolder'] . $fileKey)) {
         header("X-SendFile: " . $config['uploadPath'] . $fileKey);
@@ -98,56 +106,36 @@ $app->get('/download/file/:fileKey', function ($fileKey) use ($app, $config) {
 });
 
 //Загрузка файла на сервер
-//$app->post('/', function () use ($app, $config) {
-//    $message = 'Ошибка!!! Размер файла должен быть не более 10 мегабайт';
-//    if (isset($_FILES['userfile'])) {
-//        $file = \UppyApp\File::setPropertiesFromPost($_FILES['userfile']);
-//        $file->generateFileKey();
-//        $message = 'success';
-//        $uploader = new UppyApp\Uploader($config['uploadFolder']);
-//        try {
-//            $uploader->checkUploadErrors($file);
-//            $uploader->saveFile($file);
-//        } catch (Exception $e) {
-//            $message = $e->getMessage();
-//        }
-//    }
-//    $app->render('main.html.twig', array(
-//        'message' => $message
-//            )
-//    );
-//});
-
-
-//Тестирование загрузки ajax
 $app->post('/', function () use ($app, $config) {
-   // $message = 'Ошибка!!! Размер файла должен быть не более 10 мегабайт';
-   // if (isset($_POST['X-File-Name'])) {
-    $message='all ok'; 
-     try{   $file = new \UppyApp\File();
-        $file->setFileName($_SERVER['HTTP_X_FILE_NAME']);
-        $file->setFileType('sldjfjsdn');
-        $file->setFileSize('12345');
-        $file->generateFileKey();
-        //$message = 'success';
-        $in= fopen("php://input", "rb");
-        $out = fopen($config['uploadFolder'].$file->getFileKey(), 'w');
-        while ( ! feof($in) ) {
-            fwrite($out, fread($in, 8192));
+    $message = "";
+    if (isset($_FILES['userfile'])) {
+        $file = \UppyApp\File::setPropertiesFromPost($_FILES['userfile']);
+        $uploader = new UppyApp\Uploader($config['uploadFolder']);
+        try {
+            $uploader->checkUploadErrors($file);
+            $uploader->saveFile($file);
+        } catch (Exception $e) {
+            $message = $e->getMessage();
         }
-        fclose($in);
-        fclose($out);
-        $app->fileMapper->saveFile($file);
-     } catch (Exception $e){
-          $message = $e->getMessage();
-     }
-       
-   // }
-    $app->render('test.html.twig', array(
-        'message' => $message
-            )
-    );
+    }
+    if ($app->request->isAjax()) {
+        if (empty($message)) {
+            $app->response->setBody('Файл ' . $file->getFileName() . ' успешно загружен,  <a href="/filehost/web/' . $file->getFileKey() . '">ссылка на файл</a>');
+        } else {
+            $app->response->setBody($message);
+        }
+    } else {
+        if (empty($message)) {
+            $app->redirect('http://localhost/filehost/web/' . $file->getFileKey());
+        } else {
+            $app->render('main.html.twig', array(
+                'message' => $message
+                    )
+            );
+        }
+    }
 });
+
 
 //Отправка комментария
 $app->post('/:fileKey(/:page)', function ($key, $page = 1) use ($app) {
@@ -174,4 +162,38 @@ $app->post('/:fileKey(/:page)', function ($key, $page = 1) use ($app) {
     $app->response->redirect("/filehost/web/$key/$page");
 });
 
+
+//Поиск файла
+$app->get('/foundfiles/olol(/:page)', function ($page = 1) use ($app, $config) {
+    $search = trim($app->request->get('userSearch'));
+    if ($search) {
+        $url = '/filehost/web/foundfiles/olol';
+        $recordsPerPage = $config['filesPerPage'];
+        $startRecord = ($page - 1) * $recordsPerPage;
+        $countRecords = $app->sphinxSearch->getFilesCount($search);
+//    var_dump($countRecords);
+//    $app->stop();
+        if ($countRecords) {
+            $idArray = $app->sphinxSearch->getFilesId($search, $startRecord, $recordsPerPage);
+
+            $files = $app->fileMapper->getFilesByIdArray($idArray);
+        }
+//        var_dump($idArray);
+//    $app->stop();
+        $pages = new \UppyApp\PageNavigator($recordsPerPage, $countRecords, $url, $_SERVER['QUERY_STRING']);
+        $app->render('list.html.twig', array(
+            'files' => $files,
+            'countPage' => $pages->getPageLink(),
+            'startRecord' => $startRecord,
+            'recordsPerPage' => $recordsPerPage
+                )
+        );
+    }
+    else {
+        $app->render('main.html.twig', array(
+                'message' => 'пустой запрос'
+                    )
+            );
+    }
+});
 $app->run();
